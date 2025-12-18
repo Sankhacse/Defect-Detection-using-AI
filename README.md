@@ -16,11 +16,11 @@ This project is an AI-powered defect detection system that uses deep learning to
 
 ## 📂 Project Structure
 
-├── app.py # Run inference / detection
-├── train.py # Train the defect detection model
-├── database.py # Database operations
-├── data.yaml # Dataset and configuration
-├── requirements.txt # Project dependencies
+ - app.py           # Run inference / detection<br>
+ - train.py         # Train the defect detection model<br>
+ - database.py      # Database operations<br>
+ - data.yaml        # Dataset and configuration<br>
+ - requirements.txt # Project dependencies
 
 ---
 
@@ -82,4 +82,3 @@ This project is an AI-powered defect detection system that uses deep learning to
 Sankha Subhra Mandal<br>
 Computer Science & Engineering<br>
 IIT (BHU) Varanasi
-
