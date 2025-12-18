@@ -79,6 +79,7 @@ This project is an AI-powered defect detection system that uses deep learning to
 ---
 
 ## 👨‍💻 Author
-Sankha Subhra Mandal 
-Computer Science & Engineering
+Sankha Subhra Mandal<br>
+Computer Science & Engineering<br>
 IIT (BHU) Varanasi
+
