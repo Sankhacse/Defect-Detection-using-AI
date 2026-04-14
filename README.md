@@ -1,84 +1,195 @@
-# Defect Detection using AI 🔍🤖
+# 🔍🤖 Defect Detection using AI
 
-This project is an AI-powered defect detection system that uses deep learning to identify defects from input data and store detection results for further analysis. The system supports model training, inference, and result storage in a clean and reproducible workflow.
-
----
-
-## 🚀 Key Features
-
-- Automated defect detection using a trained deep learning model
-- Model training and inference support
-- Lightweight and modular Python codebase
-- Configurable dataset using YAML
-- Detection results stored using a local database
+An **AI-powered defect detection system** built using deep learning to automatically identify defects from input data and store results for analysis.
+Designed with a **modular, reproducible, and scalable workflow**, this project supports both training and inference.
 
 ---
 
-## 📂 Project Structure
+## 🚀 Features
 
- - app.py           # Run inference / detection<br>
- - train.py         # Train the defect detection model<br>
- - database.py      # Database operations<br>
- - data.yaml        # Dataset and configuration<br>
- - requirements.txt # Project dependencies
-
----
-
-## ⚙️ Setup Instructions
-
-1️⃣ Clone the repository: 
- - git clone https://github.com/Sankhacse/Defect-Detection-using-AI.git
- - cd Defect-Detection-using-AI
-
-2️⃣ Create and activate a virtual environment:
- - python -m venv venv
- - Windows: venv\Scripts\activate
- - macOS / Linux: source venv/bin/activate
-
-3️⃣ Install dependencies:
- - pip install -r requirements.txt
-
-4️⃣ Usage:
- - Train the model - python train.py
- - Run - python app.py
+✅ Automated defect detection using deep learning
+✅ End-to-end pipeline (training → inference → storage)
+✅ Clean and modular Python architecture
+✅ YAML-based dataset configuration
+✅ Lightweight and easy to extend
+✅ SQLite-based local result storage
 
 ---
 
-## 🧠 Model Information
+## 📁 Project Structure
 
- - The trained model (best.pt) is generated automatically during training
- - Model files are intentionally excluded from version control
- - It can be retrained using own dataset and configuration defined in data.yaml
+```
+Defect-Detection-using-AI/
+│
+├── app.py            # Run inference / detection
+├── train.py          # Train the defect detection model
+├── database.py       # Handle database operations
+├── data.yaml         # Dataset configuration
+├── requirements.txt  # Project dependencies
+└── README.md         # Project documentation
+```
+
+---
+
+## ⚙️ Installation & Setup
+
+Follow these steps carefully:
+
+### 1️⃣ Clone the Repository
+
+```
+git clone https://github.com/Sankhacse/Defect-Detection-using-AI.git
+cd Defect-Detection-using-AI
+```
+
+---
+
+### 2️⃣ Create Virtual Environment
+
+```
+python -m venv venv
+```
+
+---
+
+### 3️⃣ Activate Virtual Environment
+
+**Windows:**
+
+```
+venv\Scripts\activate
+```
+
+**macOS / Linux:**
+
+```
+source venv/bin/activate
+```
+
+---
+
+### 4️⃣ Install Dependencies
+
+```
+pip install -r requirements.txt
+```
+
+---
+
+## ▶️ Usage
+
+### 🔹 Train the Model
+
+```
+python train.py
+```
+
+* This will:
+
+  * Load dataset from `data.yaml`
+  * Train the model
+  * Save the best model as `best.pt`
+
+---
+
+### 🔹 Run Inference (Detection)
+
+```
+python app.py
+```
+
+* This will:
+
+  * Load trained model
+  * Perform defect detection
+  * Store results in database
+
+---
+
+## 🧠 Model Details
+
+* Model file: `best.pt`
+* Automatically generated after training
+* Not included in GitHub (to keep repo lightweight)
+* Can be retrained using custom datasets via `data.yaml`
 
 ---
 
 ## 🗄️ Database
 
- - Detection results are stored in a local SQLite database
- - Database files are auto-generated at runtime
- - Database files are excluded from version control to keep the repository clean
- - The database can be safely deleted and regenerated if required
+* Uses **SQLite** for storing detection results
+* Automatically created at runtime
+* Safe to delete (will regenerate automatically)
 
 ---
 
 ## 🛠 Requirements
 
- - Python 3.8 or higher
- - Required Python packages listed in requirements.txt
- - Compatible with Windows, Linux, and macOS
+* Python **3.8+**
+* OS: Windows / Linux / macOS
+* Required packages listed in:
+
+```
+requirements.txt
+```
 
 ---
 
-## 📈 Future Enhancements
+## 📊 Future Improvements
 
- - Real-time defect detection support
- - Visualization of detection results
- - Model performance evaluation metrics
- - Deployment as a web or desktop application
+🚀 Real-time defect detection
+📊 Visualization dashboard (graphs, UI)
+📈 Model performance metrics (accuracy, precision, recall)
+🌐 Deployment (Web App / Desktop App)
+☁️ Cloud integration
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome!
+
+```
+1. Fork the repository
+2. Create a new branch
+3. Make your changes
+4. Submit a pull request
+```
+
+---
+
+## 📜 License
+
+This project is open-source and available under the MIT License.
 
 ---
 
 ## 👨‍💻 Author
-Sankha Subhra Mandal<br>
-Computer Science & Engineering<br>
+
+**Sankha Subhra Mandal**
+Computer Science & Engineering
 IIT (BHU) Varanasi
+
+---
+
+## ⭐ Support
+
+If you find this project useful:
+
+👉 Star the repository
+👉 Share with others
+👉 Contribute improvements
+
+---
+
+## 💡 Tip
+
+For best results:
+
+* Use a well-labeled dataset
+* Tune hyperparameters in `train.py`
+* Adjust configuration in `data.yaml`
+
+---
+
+🔥 *Built with passion for AI & problem solving*
