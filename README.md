@@ -84,11 +84,9 @@ pip install -r requirements.txt
 python train.py
 ```
 
-* This will:
-
-  * Load dataset from `data.yaml`
-  * Train the model
-  * Save the best model as `best.pt`
+* Loads dataset from `data.yaml`
+* Trains the model
+* Saves the best model as `best.pt`
 
 ---
 
@@ -98,11 +96,9 @@ python train.py
 python app.py
 ```
 
-* This will:
-
-  * Load trained model
-  * Perform defect detection
-  * Store results in database
+* Loads trained model
+* Performs defect detection
+* Stores results in database
 
 ---
 
@@ -110,7 +106,7 @@ python app.py
 
 * Model file: `best.pt`
 * Automatically generated after training
-* Not included in GitHub (to keep repo lightweight)
+* Not included in GitHub (keeps repo lightweight)
 * Can be retrained using custom datasets via `data.yaml`
 
 ---
@@ -126,8 +122,9 @@ python app.py
 ## 🛠 Requirements
 
 * Python **3.8+**
-* OS: Windows / Linux / macOS
-* Required packages listed in:
+* Windows / Linux / macOS
+
+Dependencies are listed in:
 
 ```
 requirements.txt
@@ -138,7 +135,7 @@ requirements.txt
 ## 📊 Future Improvements
 
 🚀 Real-time defect detection
-📊 Visualization dashboard (graphs, UI)
+📊 Visualization dashboard (graphs/UI)
 📈 Model performance metrics (accuracy, precision, recall)
 🌐 Deployment (Web App / Desktop App)
 ☁️ Cloud integration
@@ -161,14 +158,6 @@ Contributions are welcome!
 ## 📜 License
 
 This project is open-source and available under the MIT License.
-
----
-
-## 👨‍💻 Author
-
-**Sankha Subhra Mandal**
-Computer Science & Engineering
-IIT (BHU) Varanasi
 
 ---
 
