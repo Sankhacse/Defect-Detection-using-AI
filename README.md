@@ -24,28 +24,36 @@ The system follows a standard **AI pipeline architecture**:
 1. **Data Ingestion**
 
    * Dataset paths and labels defined in `data.yaml`
-   * Supports flexible dataset configuration
+   * Flexible dataset configuration
 
 2. **Model Training**
 
-   * Deep learning model trained using labeled defect data
-   * Learns feature representations for defect patterns
+   * Learns defect patterns using labeled data
+   * Optimizes weights via backpropagation
 
 3. **Inference Engine**
 
    * Loads trained model (`best.pt`)
-   * Performs prediction on new/unseen data
+   * Performs prediction on new data
 
 4. **Result Storage**
 
    * Stores predictions in SQLite database
-   * Enables later analysis and tracking
+   * Enables tracking and analysis
+
+---
+
+## 📄 Project Report
+
+A detailed technical report explaining architecture, implementation, and results:
+
+👉 [View Full Report](https://drive.google.com/file/d/1UkB7i2odoNtBnfpAPt34XK_-ABe598-X/view?usp=sharing)
 
 ---
 
 ## 📁 Project Structure
 
-```
+```bash
 Defect-Detection-using-AI/
 │
 ├── app.py             # Inference pipeline (prediction + storage)
@@ -62,7 +70,7 @@ Defect-Detection-using-AI/
 
 ### 1️⃣ Clone Repository
 
-```
+```bash
 git clone https://github.com/Sankhacse/Defect-Detection-using-AI.git
 cd Defect-Detection-using-AI
 ```
@@ -71,7 +79,7 @@ cd Defect-Detection-using-AI
 
 ### 2️⃣ Create Virtual Environment
 
-```
+```bash
 python -m venv venv
 ```
 
@@ -81,13 +89,13 @@ python -m venv venv
 
 **Windows**
 
-```
+```bash
 venv\Scripts\activate
 ```
 
 **Linux / macOS**
 
-```
+```bash
 source venv/bin/activate
 ```
 
@@ -95,7 +103,7 @@ source venv/bin/activate
 
 ### 4️⃣ Install Dependencies
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
@@ -105,78 +113,63 @@ pip install -r requirements.txt
 
 ### 🔹 Train the Model
 
-```
+```bash
 python train.py
 ```
 
-**What happens internally:**
+**Internally:**
 
 * Loads dataset from `data.yaml`
-* Performs training using deep learning model
-* Optimizes weights using backpropagation
-* Saves best model → `best.pt`
+* Trains deep learning model
+* Saves best weights → `best.pt`
 
 ---
 
 ### 🔹 Run Inference
 
-```
+```bash
 python app.py
 ```
 
 **Pipeline:**
 
-* Loads trained model
-* Performs forward pass on input data
-* Generates predictions (defect / no defect)
-* Stores results in SQLite database
+* Load model
+* Run prediction
+* Store results in database
 
 ---
 
 ## 🧠 Model & AI Concepts
 
-This project leverages key deep learning concepts:
+* Supervised Learning
+* Feature Extraction
+* Forward Propagation
+* Backpropagation
 
-* **Supervised Learning** → trained on labeled defect data
-* **Feature Extraction** → automatic learning of patterns
-* **Forward Propagation** → prediction phase
-* **Backpropagation** → weight optimization during training
+### 📊 Recommended Evaluation Metrics
 
-### 📊 Evaluation Metrics (Recommended)
-
-To improve the system, you can integrate:
-
-* **Accuracy**
-* **Precision & Recall**
-* **F1 Score**
-* **Confusion Matrix**
-
-These are critical for evaluating defect detection performance.
+* Accuracy
+* Precision
+* Recall
+* F1 Score
+* Confusion Matrix
 
 ---
 
-## 🗄️ Database Design
+## 🗄️ Database
 
-* Uses **SQLite** for lightweight storage
-* Automatically initialized at runtime
-* Stores:
-
-  * Prediction results
-  * Input metadata
-* Useful for:
-
-  * Analysis
-  * Debugging
-  * Performance tracking
+* Uses **SQLite**
+* Automatically created
+* Stores predictions and metadata
 
 ---
 
 ## ⚡ Design Highlights
 
-* 📦 Modular architecture (separation of concerns)
-* 🔁 Reproducible experiments via YAML config
-* ⚙️ Scalable pipeline (can extend to real-time systems)
-* 💡 Clean integration of AI + software engineering
+* 📦 Modular architecture
+* 🔁 Reproducible via YAML config
+* ⚙️ Scalable pipeline design
+* 💡 Integration of AI + software engineering
 
 ---
 
@@ -185,21 +178,15 @@ These are critical for evaluating defect detection performance.
 * Python **3.8+**
 * Cross-platform (Windows / Linux / macOS)
 
-Dependencies:
-
-```
-requirements.txt
-```
-
 ---
 
 ## 📊 Future Improvements
 
-* 🚀 Real-time detection (video stream support)
-* 📊 Visualization dashboard (Streamlit / Web UI)
-* 📈 Advanced evaluation metrics integration
-* 🌐 Deployment (Web App / API)
-* ☁️ Cloud-based model serving
+* 🚀 Real-time detection
+* 📊 Visualization dashboard
+* 📈 Advanced metrics
+* 🌐 Deployment (Web/API)
+* ☁️ Cloud integration
 
 ---
 
@@ -207,32 +194,29 @@ requirements.txt
 
 ```
 1. Fork the repository
-2. Create a feature branch
+2. Create a new branch
 3. Commit changes
-4. Submit a pull request
+4. Submit PR
 ```
 
 ---
-
 
 ## ⭐ Support
 
 If you find this useful:
 
-👉 Star the repository
+👉 Star the repo
 👉 Share it
-👉 Contribute improvements
+👉 Contribute
 
 ---
 
 ## 💡 Best Practices
 
-* Use a well-labeled dataset
-* Balance classes (avoid bias)
+* Use well-labeled dataset
+* Avoid class imbalance
 * Tune hyperparameters
 * Validate on unseen data
 
 ---
 
-
-🔥 *Bridging AI and real-world defect detection systems*
