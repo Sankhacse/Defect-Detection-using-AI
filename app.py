@@ -79,7 +79,7 @@ st.markdown("""
 @st.cache_resource
 def load_model():
 
-    MODEL_PATH = "models/best_industrial.pt"
+    MODEL_PATH = "models/best.pt"
 
     if not os.path.exists(MODEL_PATH):
 
