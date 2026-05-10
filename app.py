@@ -3,246 +3,588 @@ from ultralytics import YOLO
 import numpy as np
 from PIL import Image
 import pandas as pd
-import plotly.graph_objects as go
+import plotly.express as px
 import json
 import cv2
-from datetime import datetime
-import database as db       
+import os
+import time
+import database as db
+
+# =========================================================
+# PAGE CONFIG
+# =========================================================
 
 st.set_page_config(
-    page_title="AI Defect Detector",
+    page_title="Industrial Defect Detector",
     page_icon="🔍",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
+# =========================================================
+# CUSTOM CSS
+# =========================================================
+
+st.markdown("""
+<style>
+
+.main {
+    background-color: #0e1117;
+    color: white;
+}
+
+.block-container {
+    padding-top: 2rem;
+}
+
+.stButton>button {
+    width: 100%;
+    border-radius: 12px;
+    height: 3em;
+    background: linear-gradient(90deg, #4F46E5, #7C3AED);
+    color: white;
+    border: none;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.stButton>button:hover {
+    transform: scale(1.02);
+}
+
+.title-text {
+    font-size: 48px;
+    font-weight: 800;
+    color: white;
+}
+
+.subtitle {
+    color: #9ca3af;
+    margin-bottom: 20px;
+}
+
+.metric-box {
+    background: #1c1f26;
+    padding: 15px;
+    border-radius: 15px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# =========================================================
+# LOAD MODEL
+# =========================================================
+
 @st.cache_resource
-def load_model(weights_path="best.pt"):
-    """Load YOLO model once and cache"""
-    return YOLO(weights_path)
+def load_model():
+
+    MODEL_PATH = "models/best_industrial.pt"
+
+    if not os.path.exists(MODEL_PATH):
+
+        st.error("❌ Trained model not found!")
+
+        st.stop()
+
+    return YOLO(MODEL_PATH)
+
+# =========================================================
+# INIT DATABASE
+# =========================================================
 
 @st.cache_resource
 def init_database():
+
     db.init_db()
+
     return True
 
 model = load_model()
+
 init_database()
 
-def detect_defects_yolo(image, conf_threshold=0.25):
-    """Run YOLO detection on an image and return structured results"""
-    results = model.predict(source=np.array(image), save=False, imgsz=640, conf=conf_threshold)
+# =========================================================
+# DETECTION FUNCTION
+# =========================================================
+
+def detect_defects(image, conf_threshold=0.25):
+
+    start_time = time.time()
+
+    results = model.predict(
+        source=np.array(image),
+        imgsz=640,
+        conf=conf_threshold,
+        verbose=False
+    )
+
+    end_time = time.time()
+
+    processing_time = round(
+        end_time - start_time,
+        3
+    )
+
     boxes = results[0].boxes
+
     names = model.names
 
     defects = []
-    if boxes is not None and len(boxes) > 0:
+
+    if boxes:
+
         confs = boxes.conf.cpu().numpy()
+
         classes = boxes.cls.cpu().numpy()
+
         xywh = boxes.xywh.cpu().numpy()
 
         for i in range(len(boxes)):
-            cls_name = names[int(classes[i])]
-            conf = float(confs[i])
-            x, y, w, h = xywh[i]
-            defects.append({
-                "type": cls_name,
-                "confidence": conf,
-                "bbox": (int(x - w/2), int(y - h/2), int(w), int(h)),
-                "area": int(w * h)
-            })
-    return defects, results[0].plot()
 
-def draw_defects(image, annotated_image):
-    """Convert annotated image array to PIL"""
-    return Image.fromarray(annotated_image)
+            defects.append({
+
+                "Type": names[int(classes[i])],
+
+                "Confidence": round(
+                    float(confs[i]) * 100,
+                    2
+                ),
+
+                "Area": int(
+                    xywh[i][2] * xywh[i][3]
+                )
+            })
+
+    annotated = results[0].plot()
+
+    return defects, annotated, processing_time
+
+# =========================================================
+# IMAGE CONVERSION
+# =========================================================
+
+def convert_image(image):
+
+    return Image.fromarray(
+        cv2.cvtColor(
+            image,
+            cv2.COLOR_BGR2RGB
+        )
+    )
+
+# =========================================================
+# SIDEBAR
+# =========================================================
 
 with st.sidebar:
-    st.header("📊 Detection Statistics")
+
+    st.title("⚙️ Control Panel")
 
     stats = db.get_detection_stats()
-    if stats['total_images'] > 0:
-        st.metric("Total Images Analyzed", stats['total_images'])
-        st.metric("Total Defects Found", stats['total_defects'])
-        if stats['total_defects'] > 0:
-            st.metric("Average Confidence", f"{stats['avg_confidence']:.2%}")
-    else:
-        st.info("No images analyzed yet")
 
-    st.divider()
-    st.header("⚙️ Settings")
-    show_confidence_threshold = st.slider("Confidence Threshold", 0.1, 1.0, 0.25, 0.05)
-    if st.button("🧹 Clear History", use_container_width=True):
+    st.metric(
+        "📷 Images Processed",
+        stats['total_images']
+    )
+
+    st.metric(
+        "⚠️ Total Defects",
+        stats['total_defects']
+    )
+
+    st.metric(
+        "🎯 Avg Confidence",
+        f"{stats['avg_confidence']}%"
+    )
+
+    st.markdown("---")
+
+    confidence = st.slider(
+        "Confidence Threshold",
+        0.1,
+        1.0,
+        0.25,
+        0.05
+    )
+
+    st.markdown("---")
+
+    if st.button("🗑️ Clear Detection History"):
+
         db.clear_all()
+
+        st.success("History Cleared!")
+
         st.rerun()
 
-st.title("🔍 AI Manufacturing Defect Detector")
-st.markdown("Upload product images to detect manufacturing defects using the YOLO model.")
+    st.markdown("---")
 
-tab1, tab2 = st.tabs(["🖼️ Single Image", "📁 Batch Processing"])
+    st.info("""
+    ### 📌 Tips
+    - Upload clear industrial images
+    - Higher confidence reduces false detections
+    - Supports JPG, PNG, JPEG
+    """)
+
+# =========================================================
+# HEADER
+# =========================================================
+
+st.markdown("""
+<div class='title-text'>
+🔍 Industrial Defect Detector
+</div>
+
+<div class='subtitle'>
+AI-Powered Surface Defect Detection using YOLOv12
+</div>
+""", unsafe_allow_html=True)
+
+# =========================================================
+# TABS
+# =========================================================
+
+tab1, tab2, tab3 = st.tabs([
+    "🖼 Single Image",
+    "📂 Batch Processing",
+    "📊 Analytics Dashboard"
+])
+
+# =========================================================
+# SINGLE IMAGE
+# =========================================================
 
 with tab1:
-    col1, col2 = st.columns(2)
 
-    with col1:
-        st.subheader("📤 Upload Image")
-        uploaded_file = st.file_uploader(
-            "Choose a product image...",
-            type=['jpg', 'jpeg', 'png'],
-            key="single_upload"
-        )
+    uploaded = st.file_uploader(
+        "Upload Industrial Image",
+        type=["jpg", "jpeg", "png"]
+    )
 
-        if uploaded_file is not None:
-            image = Image.open(uploaded_file).convert("RGB")
-            st.image(image, caption="Original Image", use_container_width=True)
+    if uploaded:
 
-            if st.button("🔍 Analyze for Defects", type="primary", use_container_width=True):
-                with st.spinner("Analyzing image for defects..."):
-                    defects, annotated = detect_defects_yolo(image, show_confidence_threshold)
-                    filtered_defects = [d for d in defects if d["confidence"] >= show_confidence_threshold]
+        image = Image.open(uploaded).convert("RGB")
 
-                    result_image = draw_defects(image, annotated)
+        col1, col2 = st.columns(2)
 
-                    avg_conf = np.mean([d['confidence'] for d in filtered_defects]) if filtered_defects else 0
-                    defect_details = json.dumps(filtered_defects)
+        with col1:
 
-                    db.add_detection(uploaded_file.name, len(filtered_defects), avg_conf, defect_details)
+            st.markdown("### 📷 Original Image")
 
-                    st.session_state.current_image = image
-                    st.session_state.current_result_image = result_image
-                    st.session_state.current_defects = filtered_defects
+            st.image(
+                image,
+                use_container_width=True
+            )
 
-                    st.rerun()
+        with col2:
 
-    with col2:
-        st.subheader("📋 Detection Results")
+            st.markdown("### ⚡ AI Detection")
 
-        if hasattr(st.session_state, "current_defects"):
-            defects = st.session_state.current_defects
-            if len(defects) > 0:
-                st.image(st.session_state.current_result_image,
-                         caption=f"Detected {len(defects)} Defect(s)",
-                         use_column_width=True)
-                st.error(f"⚠️ {len(defects)} Defect(s) Detected")
+            if st.button("🚀 Analyze Image"):
 
-                defect_data = [{
-                    "No.": i + 1,
-                    "Type": d["type"],
-                    "Confidence": f"{d['confidence']:.2%}",
-                    "Area": d["area"]
-                } for i, d in enumerate(defects)]
+                with st.spinner("Detecting defects..."):
 
-                df = pd.DataFrame(defect_data)
-                st.dataframe(df, use_container_width=True, hide_index=True)
+                    defects, annotated, processing_time = detect_defects(
+                        image,
+                        confidence
+                    )
 
-                defect_types = [d["type"] for d in defects]
-                type_counts = pd.Series(defect_types).value_counts()
+                    result_img = convert_image(
+                        annotated
+                    )
 
-                fig = go.Figure(data=[go.Pie(labels=type_counts.index, values=type_counts.values, hole=0.3)])
-                fig.update_layout(title="Defect Type Distribution", height=300)
-                st.plotly_chart(fig, use_container_width=True)
+                    avg_conf = (
+                        np.mean([
+                            d['Confidence']
+                            for d in defects
+                        ])
+                        if defects else 0
+                    )
+
+                    db.add_detection(
+                        uploaded.name,
+                        len(defects),
+                        avg_conf,
+                        json.dumps(defects),
+                        processing_time
+                    )
+
+                    st.session_state.result = (
+                        result_img,
+                        defects,
+                        processing_time
+                    )
+
+                    st.success(
+                        "Detection Complete!"
+                    )
+
+    # =====================================================
+    # SHOW RESULTS
+    # =====================================================
+
+    if "result" in st.session_state:
+
+        result_img, defects, processing_time = st.session_state.result
+
+        st.markdown("---")
+
+        st.markdown("## 🎯 Detection Results")
+
+        col1, col2 = st.columns([2, 1])
+
+        with col1:
+
+            st.image(
+                result_img,
+                caption="Detected Defects",
+                use_container_width=True
+            )
+
+        with col2:
+
+            st.metric(
+                "⚠️ Total Defects",
+                len(defects)
+            )
+
+            avg_conf = (
+                round(
+                    np.mean([
+                        d['Confidence']
+                        for d in defects
+                    ]),
+                    2
+                )
+                if defects else 0
+            )
+
+            st.metric(
+                "🎯 Avg Confidence",
+                f"{avg_conf}%"
+            )
+
+            st.metric(
+                "⏱️ Processing Time",
+                f"{processing_time}s"
+            )
+
+            if defects:
+
+                st.success(
+                    "Defects detected successfully!"
+                )
+
             else:
-                st.success("✅ No Defects Detected")
-        else:
-            st.info("👆 Upload an image and click 'Analyze for Defects' to begin detection.")
 
-# ======== BATCH TAB ========
+                st.info(
+                    "No defects found."
+                )
+
+        # =================================================
+        # DEFECT TABLE
+        # =================================================
+
+        if defects:
+
+            st.markdown("### 📋 Defect Details")
+
+            df = pd.DataFrame(defects)
+
+            st.dataframe(
+                df,
+                use_container_width=True,
+                hide_index=True
+            )
+
+            # PIE CHART
+
+            type_counts = df["Type"].value_counts()
+
+            fig = px.pie(
+                values=type_counts.values,
+                names=type_counts.index,
+                title="Defect Distribution"
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+# =========================================================
+# BATCH PROCESSING
+# =========================================================
+
 with tab2:
-    st.subheader("📁 Batch Upload & Analysis")
+
     batch_files = st.file_uploader(
-        "Choose multiple product images...",
-        type=['jpg', 'jpeg', 'png'],
-        accept_multiple_files=True,
-        key="batch_upload"
+        "Upload Multiple Images",
+        type=["jpg", "jpeg", "png"],
+        accept_multiple_files=True
     )
 
     if batch_files:
-        st.write(f"**{len(batch_files)} image(s) uploaded**")
 
-        if st.button("🔍 Analyze All Images", type="primary", use_container_width=True):
+        st.markdown(
+            f"### 📂 {len(batch_files)} files selected"
+        )
+
+        if st.button("⚡ Process All Images"):
+
+            progress = st.progress(0)
+
             batch_results = []
-            progress_bar = st.progress(0)
-            status_text = st.empty()
 
             for idx, file in enumerate(batch_files):
-                status_text.text(f"Processing {idx + 1}/{len(batch_files)}: {file.name}")
+
                 image = Image.open(file).convert("RGB")
 
-                defects, annotated = detect_defects_yolo(image, show_confidence_threshold)
-                filtered_defects = [d for d in defects if d["confidence"] >= show_confidence_threshold]
+                defects, _, processing_time = detect_defects(
+                    image,
+                    confidence
+                )
 
-                avg_conf = np.mean([d['confidence'] for d in filtered_defects]) if filtered_defects else 0
-                defect_details = json.dumps(filtered_defects)
-
-                db.add_detection(file.name, len(filtered_defects), avg_conf, defect_details)
+                db.add_detection(
+                    file.name,
+                    len(defects),
+                    0,
+                    "",
+                    processing_time
+                )
 
                 batch_results.append({
-                    "filename": file.name,
-                    "defect_count": len(filtered_defects),
-                    "avg_confidence": avg_conf,
-                    "image": draw_defects(image, annotated)
+
+                    "Image": file.name,
+
+                    "Defects": len(defects),
+
+                    "Processing Time": processing_time
                 })
 
-                progress_bar.progress((idx + 1) / len(batch_files))
+                progress.progress(
+                    (idx + 1) / len(batch_files)
+                )
 
-            status_text.success("✅ Batch analysis completed!")
-            st.session_state.batch_results = batch_results
-            st.rerun()
+            st.success(
+                "Batch Processing Complete!"
+            )
 
-    if hasattr(st.session_state, "batch_results") and st.session_state.batch_results:
-        st.divider()
-        st.subheader("📊 Batch Analysis Results")
+            batch_df = pd.DataFrame(
+                batch_results
+            )
 
-        total_defects = sum([r["defect_count"] for r in st.session_state.batch_results])
-        images_with_defects = sum([1 for r in st.session_state.batch_results if r["defect_count"] > 0])
+            st.dataframe(
+                batch_df,
+                use_container_width=True,
+                hide_index=True
+            )
 
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Images Processed", len(st.session_state.batch_results))
-        col2.metric("Images with Defects", images_with_defects)
-        col3.metric("Total Defects Found", total_defects)
+            fig = px.bar(
+                batch_df,
+                x="Image",
+                y="Defects",
+                title="Defects per Image"
+            )
 
-        results_data = [{
-            "Filename": r["filename"],
-            "Defects Found": r["defect_count"],
-            "Avg Confidence": f"{r['avg_confidence']:.2%}" if r["avg_confidence"] > 0 else "N/A",
-            "Status": "⚠️ Defects" if r["defect_count"] > 0 else "✅ Clean"
-        } for r in st.session_state.batch_results]
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
 
-        st.dataframe(pd.DataFrame(results_data), use_container_width=True, hide_index=True)
+# =========================================================
+# ANALYTICS
+# =========================================================
 
-        st.subheader("Analyzed Images")
-        cols_per_row = 3
-        for i in range(0, len(st.session_state.batch_results), cols_per_row):
-            cols = st.columns(cols_per_row)
-            for j in range(cols_per_row):
-                idx = i + j
-                if idx < len(st.session_state.batch_results):
-                    result = st.session_state.batch_results[idx]
-                    with cols[j]:
-                        st.image(result["image"], caption=f"{result['filename']} ({result['defect_count']} defects)", use_container_width=True)
+with tab3:
 
-# ======== HISTORY SECTION ========
-history_records = db.get_all_detections()
-if history_records:
-    st.divider()
-    st.subheader("📜 Detection History")
+    st.markdown(
+        "## 📊 Analytics Dashboard"
+    )
 
-    display_records = [{
-        "Timestamp": r[4],
-        "Filename": r[1],
-        "Defects Found": r[2],
-        "Avg Confidence": f"{r[3]:.2%}" if r[3] > 0 else "N/A"
-    } for r in history_records]
-    history_df = pd.DataFrame(display_records)
-    st.dataframe(history_df, use_container_width=True, hide_index=True)
+    stats = db.get_detection_stats()
 
-st.divider()
-st.markdown("""
-### 🧠 YOLO Model Integration Notes
+    col1, col2, col3 = st.columns(3)
 
-This app uses a **YOLO model (Ultralytics)** for detecting product defects.
+    with col1:
 
-To change the model:
-1. Replace the `best.pt` file with your own trained YOLO weights.
-2. Adjust confidence thresholds in the sidebar as needed.
-3. The results are automatically saved in the local database for analytics.
-""")
+        st.metric(
+            "📷 Images Processed",
+            stats['total_images']
+        )
+
+    with col2:
+
+        st.metric(
+            "⚠️ Total Defects",
+            stats['total_defects']
+        )
+
+    with col3:
+
+        avg_defects = round(
+            stats['total_defects'] /
+            stats['total_images'],
+            2
+        ) if stats['total_images'] > 0 else 0
+
+        st.metric(
+            "📈 Avg Defects/Image",
+            avg_defects
+        )
+
+    st.markdown("---")
+
+    distribution = db.get_defect_distribution()
+
+    if distribution:
+
+        dist_df = pd.DataFrame({
+
+            "Defect": list(
+                distribution.keys()
+            ),
+
+            "Count": list(
+                distribution.values()
+            )
+        })
+
+        fig = px.bar(
+            dist_df,
+            x="Defect",
+            y="Count",
+            title="Overall Defect Distribution"
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+    detections = db.get_dataframe()
+
+    if not detections.empty:
+
+        st.markdown(
+            "### 📋 Detection History"
+        )
+
+        st.dataframe(
+            detections,
+            use_container_width=True,
+            hide_index=True
+        )
+
+    st.markdown("---")
+
+    st.info("""
+    ### 🚀 Future Upgrades
+    - PCB defect detection
+    - Live webcam inspection
+    - PDF report generation
+    - Multi-model AI system
+    - Real-time factory dashboard
+    - Cloud deployment
+    """)
